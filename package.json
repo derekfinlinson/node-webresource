@@ -9,5 +9,13 @@
   "dependencies": {
     "CRMWebAPI": "^1.3.4",
     "adal-node": "^0.1.22"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/derekfinlinson/node-webresource.git"
+  },
+  "bugs": {
+    "url": "https://github.com/derekfinlinson/node-webresource/issues"
+  },
+  "homepage": "https://github.com/derekfinlinson/node-webresource#readme"
 }
