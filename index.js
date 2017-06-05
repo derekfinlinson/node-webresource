@@ -3,8 +3,6 @@ var adal = require('adal-node');
 var path = require('path');
 var fs = require('fs');
 
-var WebResource = function() {};
-
 function getWebResourceType(type) {
   switch (type) {
     case 'HTML':
@@ -32,29 +30,45 @@ function getWebResourceType(type) {
   }
 }
 
-WebResource.prototype.upload = function (config, assets) {
-    console.log("\r\nUploading web resources...");
-
+function authenticate (config) {
     return new Promise(function (resolve, reject) {
         // Authenticate
         var authorityHostUrl = 'https://login.windows.net/' + config.tenant;
         var context = new adal.AuthenticationContext(authorityHostUrl);                
 
-        context.acquireTokenWithClientCredentials(config.server, config.clientId, config.clientSecret, function (err, token) {
+        function tokenResponse(err, token) {
             if (err) {
                 reject(err);
                 return;
             }
 
+            resolve(token.accessToken);
+        }
+
+        var clientId = config.clientId || "9e485407-e2fc-45d9-a696-6c9a3db955f4";
+
+        if (config.clientSecret != null) {
+            context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret, tokenResponse);
+        } else {
+            context.acquireTokenWithUsernamePassword(config.server, config.username, config.password, clientId, tokenResponse);
+        }
+    });
+}
+
+exports.upload = function(config, assets) {
+    return new Promise(function (resolve, reject) {
+        authenticate(config).then((token) => {
+            console.log("\r\nUploading web resources...");
+
             var apiConfig = {
                 APIUrl: config.server + `/api/data/v8.0/`,
-                AccessToken: token.accessToken
+                AccessToken: token
             };
 
             var api = new webApi(apiConfig);
 
-            // Retrieve assets from CRM
-            const resources = Promise.all(assets.map((asset) => {
+            // Retrieve assets from CRM then create/update
+            var resources = Promise.all(assets.map((asset) => {
                 // Get web resource from config
                 var resource = config.webResources.filter((wr) => {
                     return wr.path === asset;
@@ -75,49 +89,56 @@ WebResource.prototype.upload = function (config, assets) {
                     return api.GetList("webresourceset", option).then((result) => {
                         // Create or update web resource
                         var webResource = {
-                            content: fs.readFileSync(asset).toString()
+                            content: new Buffer(fs.readFileSync(asset).toString()).toString('base64')
                         };
 
                         if (result.List.length === 0) {
+                            console.log(`Creating web resource ${resource.uniqueName}`);
                             webResource.webresourcetype = getWebResourceType(resource.type);
                             webResource.name = resource.uniqueName;
                             webResource.displayname = resource.displayName || resource.uniqueName
 
                             return api.Create("webresourceset", webResource);
                         } else {
+                            console.log(`Updating web resource ${resource.uniqueName}`);
                             return api.Update("webresourceset", result.List[0].webresourceid, webResource);
                         }
                     });
                 }            
-            })).then((upserts) => {
+            }));
+            
+            // Publish resources
+            resources.then((upserts) => {
                 console.log("Publishing web resources...");
 
                 // Get updates
                 var updates = upserts.filter((u) => {
-                    return u.hasOwnProperty("EntityID");
+                    return typeof(u) !== "undefined" && u.hasOwnProperty("EntityID");
                 }).map((u) => `<webresource>{${u.EntityID}}</webresource>`).join("");
                 
                 // Get inserts
                 var inserts = upserts.filter((u) => {
-                    return !u.hasOwnProperty("EntityID");
+                    return typeof(u) !== "undefined" && !u.hasOwnProperty("EntityID");
                 });
 
                 var tasks = [];
 
                 // Publish all updates at once
-                tasks.push({
-                    action: "PublishXml",
-                    data: {
-                        ParameterXml: `<importexportxml><webresources>${updates}</webresources></importexportxml>`
-                    }
-                });
+                if  (updates != "") {
+                    tasks.push({
+                        action: "PublishXml",
+                        data: {
+                            ParameterXml: `<importexportxml><webresources>${updates}</webresources></importexportxml>`
+                        }
+                    });
+                }
 
                 // Add solution component individually
                 inserts.forEach((i) => {
                     var item = {
                         action: "AddSolutionComponent",
                         data: {
-                            ComponentId: upsert,
+                            ComponentId: i,
                             ComponentType: 61,
                             SolutionUniqueName: config.solution,
                             AddRequiredComponents: false,
@@ -141,8 +162,8 @@ WebResource.prototype.upload = function (config, assets) {
             }, (error) => {
                 reject(error);
             });
+        }, (error) => {
+            reject(error);
         });
     });
-};
-
-module.exports = new WebResource();
+}

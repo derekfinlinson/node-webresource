@@ -8,7 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "CRMWebAPI": "^1.3.4",
-    "adal-node": "^0.1.22"
+    "adal-node": ">= 0.1.3"
   },
   "repository": {
     "type": "git",
