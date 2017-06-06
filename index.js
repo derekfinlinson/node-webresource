@@ -71,11 +71,11 @@ exports.upload = function(config, assets) {
             var resources = Promise.all(assets.map((asset) => {
                 // Get web resource from config
                 var resource = config.webResources.filter((wr) => {
-                    return wr.path === asset;
+                    return wr.path === asset.name;
                 });
                 
                 if (resource.length === 0) {
-                    console.log("Web resource " + asset + " is not configured");
+                    console.log("Web resource " + asset.name + " is not configured");
                     return Promise.resolve();
                 } else {
                     resource = resource[0];
@@ -89,7 +89,7 @@ exports.upload = function(config, assets) {
                     return api.GetList("webresourceset", option).then((result) => {
                         // Create or update web resource
                         var webResource = {
-                            content: new Buffer(fs.readFileSync(asset).toString()).toString('base64')
+                            content: new Buffer(asset.source).toString('base64')
                         };
 
                         if (result.List.length === 0) {
