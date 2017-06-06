@@ -1,9 +1,11 @@
 {
   "name": "node-webresource",
-  "version": "1.0.0",
+  "version": "0.0.0-development",
   "description": "Node module to upload web resources to Dynamics 365",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+  },
   "author": "Derek Finlinson",
   "license": "MIT",
   "dependencies": {
@@ -12,10 +14,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/derekfinlinson/node-webresource.git"
+    "url": "https://github.com/derekfinlinson/node-webresource.git"
   },
   "bugs": {
     "url": "https://github.com/derekfinlinson/node-webresource/issues"
   },
-  "homepage": "https://github.com/derekfinlinson/node-webresource#readme"
+  "homepage": "https://github.com/derekfinlinson/node-webresource#readme",
+  "devDependencies": {
+    "cz-conventional-changelog": "^2.0.0",
+    "semantic-release": "^6.3.6"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
 }
