@@ -45,7 +45,7 @@ function authenticate (config) {
             resolve(token.accessToken);
         }
 
-        var clientId = config.clientId || "9e485407-e2fc-45d9-a696-6c9a3db955f4";
+        var clientId = config.clientId || "23c6f02c-7363-4755-a730-96bb2e700145";
 
         if (config.clientSecret != null) {
             context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret, tokenResponse);
