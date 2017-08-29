@@ -1,7 +1,5 @@
 var webApi = require('CRMWebAPI');
 var adal = require('adal-node');
-var path = require('path');
-var fs = require('fs');
 
 function getWebResourceType(type) {
   switch (type) {
@@ -45,7 +43,7 @@ function authenticate (config) {
             resolve(token.accessToken);
         }
 
-        var clientId = config.clientId || "9e485407-e2fc-45d9-a696-6c9a3db955f4";
+        var clientId = config.clientId || "85e1eea4-b614-40c9-acc8-58c95bb4cdf2";
 
         if (config.clientSecret != null) {
             context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret, tokenResponse);
