@@ -1,7 +1,5 @@
 var webApi = require('CRMWebAPI');
 var adal = require('adal-node');
-var path = require('path');
-var fs = require('fs');
 
 function getWebResourceType(type) {
   switch (type) {
