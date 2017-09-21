@@ -7,7 +7,7 @@ Node module for publishing Dynamics 365 web resources, inspired by [gulp-webreso
 npm install -D node-webresource
 ```
 
-Sign in [here](https://login.microsoftonline.com/common/oauth2/authorize?%20response_type=code&client_id=85e1eea4-b614-40c9-acc8-58c95bb4cdf2&redirect_uri=https://github.com/derekfinlinson/node-webresource) to grant access to your Dynamics 365 organization.
+Sign in [here](https://login.microsoftonline.com/common/oauth2/authorize?%20response_type=code&client_id=c67c746f-9745-46eb-83bb-5742263736b7&redirect_uri=https://github.com/derekfinlinson/node-webresource) to grant access to your Dynamics 365 organization.
 
 ## Sample config file and usage
 
