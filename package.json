@@ -2,15 +2,18 @@
   "name": "node-webresource",
   "version": "0.0.0-development",
   "description": "Node module to upload web resources to Dynamics 365",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.t.ts",
   "scripts": {
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "prepublishOnly": "npm run build",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post",
+    "build": "tsc"
   },
   "author": "Derek Finlinson",
   "license": "MIT",
   "dependencies": {
-    "CRMWebAPI": "^1.3.4",
-    "adal-node": ">= 0.1.3"
+    "CRMWebAPI": "^1.3.5",
+    "adal-node": "^0.1.22"
   },
   "repository": {
     "type": "git",
@@ -21,8 +24,10 @@
   },
   "homepage": "https://github.com/derekfinlinson/node-webresource#readme",
   "devDependencies": {
+    "@types/npm": "^2.0.29",
     "cz-conventional-changelog": "^2.0.0",
-    "semantic-release": "^6.3.6"
+    "semantic-release": "^6.3.6",
+    "typescript": "^2.5.3"
   },
   "config": {
     "commitizen": {
