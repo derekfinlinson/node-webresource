@@ -45,6 +45,7 @@ function authenticate (config: Config): Promise<string> {
         const context: any = new adal.AuthenticationContext(authorityHostUrl);
         const clientId: string = config.clientId || "c67c746f-9745-46eb-83bb-5742263736b7";
 
+        // use client id/secret auth
         if (config.clientSecret != null && config.clientSecret !== "") {
             context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret,
                 (ex: string, token: any) => {
@@ -55,6 +56,7 @@ function authenticate (config: Config): Promise<string> {
                     }
                 }
             );
+        // username/password authentication
         } else {
             context.acquireTokenWithUsernamePassword(config.server, config.username, config.password, clientId,
                 (ex: string, token: any) => {
