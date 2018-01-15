@@ -23,8 +23,8 @@ var uploadConfig = {
     server: "https://mycompany.crm.dynamics.com",
     webResources: [
         {
-            "path": "/path/to/file/formscript.js",
-            "uniqueName": "new_formscript.js"
+            "path": "path\\to\\file\\formscript.js",
+            "name": "new_formscript.js"
         }
     ],
     solution: "MySolution"
@@ -38,8 +38,8 @@ uploadConfig.clientSecret: "ClientSecret";
 
 var assets = [
     {
-        name: "/path/to/file/formscript.js", // Should match webResources path
-        source: "function onLoad() {}"
+        path: "path\\to\\file\\formscript.js", // Should match webResources path
+        content: "function onLoad() {}"
     };
 ];
 
