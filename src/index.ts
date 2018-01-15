@@ -126,6 +126,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
             token = await authenticate(config);
         } catch (ex) {
             reject(ex);
+            return;
         }
 
         console.log("\r\nUploading web resources...");
