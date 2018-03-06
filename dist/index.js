@@ -8,27 +8,39 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const CRMWebAPI = require("CRMWebAPI");
+const CRMWebAPI = require("CrmWebAPI");
 const adal = require("adal-node");
-var WebResourceType;
-(function (WebResourceType) {
-    WebResourceType[WebResourceType["HTML"] = 1] = "HTML";
-    WebResourceType[WebResourceType["CSS"] = 2] = "CSS";
-    WebResourceType[WebResourceType["JavaScript"] = 3] = "JavaScript";
-    WebResourceType[WebResourceType["XML"] = 4] = "XML";
-    WebResourceType[WebResourceType["PNG"] = 5] = "PNG";
-    WebResourceType[WebResourceType["JPG"] = 6] = "JPG";
-    WebResourceType[WebResourceType["GIF"] = 7] = "GIF";
-    WebResourceType[WebResourceType["XAP"] = 8] = "XAP";
-    WebResourceType[WebResourceType["XSL"] = 9] = "XSL";
-    WebResourceType[WebResourceType["ICO"] = 10] = "ICO";
-})(WebResourceType = exports.WebResourceType || (exports.WebResourceType = {}));
+function getWebResourceType(type) {
+    switch (type) {
+        case 'HTML':
+            return 1;
+        case 'CSS':
+            return 2;
+        case 'JavaScript':
+            return 3;
+        case 'XML':
+            return 4;
+        case 'PNG':
+            return 5;
+        case 'JPG':
+            return 6;
+        case 'GIF':
+            return 7;
+        case 'XAP':
+            return 8;
+        case 'XSL':
+            return 9;
+        case 'ICO':
+            return 10;
+    }
+}
 function authenticate(config) {
     return new Promise((resolve, reject) => {
         // authenticate
         const authorityHostUrl = `https://login.windows.net/${config.tenant}`;
         const context = new adal.AuthenticationContext(authorityHostUrl);
         const clientId = config.clientId || "c67c746f-9745-46eb-83bb-5742263736b7";
+        // use client id/secret auth
         if (config.clientSecret != null && config.clientSecret !== "") {
             context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret, (ex, token) => {
                 if (ex) {
@@ -38,6 +50,7 @@ function authenticate(config) {
                     resolve(token.accessToken);
                 }
             });
+            // username/password authentication
         }
         else {
             context.acquireTokenWithUsernamePassword(config.server, config.username, config.password, clientId, (ex, token) => {
@@ -80,7 +93,7 @@ function getUpserts(config, assets, api) {
             };
             if (result.List.length === 0) {
                 console.log(`Creating web resource ${resource[0].name}`);
-                webResource.type = resource[0].type;
+                webResource.webresourcetype = getWebResourceType(resource[0].type);
                 webResource.name = resource[0].name;
                 webResource.displayname = resource[0].displayname || resource[0].name;
                 return api.Create("webresourceset", webResource);
@@ -100,6 +113,7 @@ function upload(config, assets) {
         }
         catch (ex) {
             reject(ex);
+            return;
         }
         console.log("\r\nUploading web resources...");
         var apiConfig = {
@@ -114,6 +128,7 @@ function upload(config, assets) {
         }
         catch (ex) {
             reject(ex);
+            return;
         }
         // publish resources
         console.log("Publishing web resources...");
@@ -158,6 +173,7 @@ function upload(config, assets) {
             }
             catch (ex) {
                 reject(ex);
+                return;
             }
         }
         console.log("Uploaded and published web resources\r\n");

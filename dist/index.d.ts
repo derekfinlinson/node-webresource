@@ -1,15 +1,3 @@
-export declare enum WebResourceType {
-    HTML = 1,
-    CSS = 2,
-    JavaScript = 3,
-    XML = 4,
-    PNG = 5,
-    JPG = 6,
-    GIF = 7,
-    XAP = 8,
-    XSL = 9,
-    ICO = 10,
-}
 export interface Config {
     tenant: string;
     clientId?: string;
@@ -23,9 +11,10 @@ export interface Config {
 export interface WebResource {
     displayname?: string;
     name?: string;
-    type?: WebResourceType;
+    type?: string;
     content: string;
     path?: string;
+    webresourcetype?: number;
 }
 export interface WebResourceAsset {
     content: string;

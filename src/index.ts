@@ -1,17 +1,30 @@
-import CRMWebAPI = require("CRMWebAPI");
+import * as CRMWebAPI from 'CrmWebAPI';
+
 const adal: any = require("adal-node");
 
-export enum WebResourceType {
-    HTML = 1,
-    CSS = 2,
-    JavaScript = 3,
-    XML = 4,
-    PNG = 5,
-    JPG = 6,
-    GIF = 7,
-    XAP = 8,
-    XSL = 9,
-    ICO = 10
+function getWebResourceType(type: string): number {
+    switch (type) {
+        case 'HTML':
+            return 1;            
+        case 'CSS':
+            return 2;
+        case 'JavaScript':
+            return 3;
+        case 'XML':
+            return 4;
+        case 'PNG':
+            return 5;
+        case 'JPG':
+            return 6;
+        case 'GIF':
+            return 7;
+        case 'XAP':
+            return 8;
+        case 'XSL':
+            return 9;
+        case 'ICO':
+            return 10;
+    }
 }
 
 export interface Config {
@@ -28,9 +41,10 @@ export interface Config {
 export interface WebResource {
     displayname?: string;
     name?: string;
-    type?: WebResourceType;
+    type?: string;
     content: string;
     path?: string;
+    webresourcetype?: number;
 }
 
 export interface WebResourceAsset {
@@ -104,7 +118,7 @@ function getUpserts(config: Config, assets: WebResourceAsset[], api: CRMWebAPI):
             if (result.List.length === 0) {
                 console.log(`Creating web resource ${resource[0].name}`);
 
-                webResource.type = resource[0].type;
+                webResource.webresourcetype = getWebResourceType(resource[0].type);
                 webResource.name = resource[0].name;
                 webResource.displayname = resource[0].displayname || resource[0].name;
 
@@ -145,6 +159,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
             upserts = await Promise.all(getUpserts(config, assets, api));
         } catch (ex) {
             reject(ex);
+            return;
         }
 
         // publish resources
@@ -195,6 +210,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
                 await api.ExecuteAction(tasks[i].action, tasks[i].data);
             } catch (ex) {
                 reject(ex);
+                return;
             }
         }
 
