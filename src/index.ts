@@ -1,4 +1,4 @@
-import * as CRMWebAPI from 'CrmWebAPI';
+import * as CRMWebAPI from 'CRMWebAPI';
 
 const adal: any = require("adal-node");
 
