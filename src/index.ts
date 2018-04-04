@@ -1,4 +1,4 @@
-import * as CRMWebAPI from 'CRMWebAPI';
+import { WebApi } from 'xrm-webapi';
 
 const adal: any = require("adal-node");
 
@@ -85,7 +85,7 @@ function authenticate (config: Config): Promise<string> {
     });
 }
 
-function getUpserts(config: Config, assets: WebResourceAsset[], api: CRMWebAPI): Promise<any>[] {
+function getUpserts(config: Config, assets: WebResourceAsset[], api: WebApi): Promise<any>[] {
     return assets.map(async asset => {
         // get web resource from config
         let resource: WebResource[] = config.webResources.filter((wr) => {
@@ -97,15 +97,12 @@ function getUpserts(config: Config, assets: WebResourceAsset[], api: CRMWebAPI):
             return Promise.resolve();
         } else {
             // check if web resource already exists
-            const options: CRMWebAPI.QueryOptions = {
-                Select: ["webresourceid"],
-                Filter: `name eq '${resource[0].name}'`
-            };
+            const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`
 
-            let result: CRMWebAPI.GetListResponse<any>;
+            let result: any;
 
             try {
-                result = await api.GetList("webresourceset", options);
+                result = await api.retrieveMultiple("webresourceset", options);
             } catch (ex) {
                 return Promise.reject(ex);
             }
@@ -115,18 +112,18 @@ function getUpserts(config: Config, assets: WebResourceAsset[], api: CRMWebAPI):
                 content: new Buffer(asset.content).toString("base64")
             };
 
-            if (result.List.length === 0) {
+            if (result.data.value.length === 0) {
                 console.log(`Creating web resource ${resource[0].name}`);
 
                 webResource.webresourcetype = getWebResourceType(resource[0].type);
                 webResource.name = resource[0].name;
                 webResource.displayname = resource[0].displayname || resource[0].name;
 
-                return api.Create("webresourceset", webResource);
+                return api.create("webresourceset", webResource);
             } else {
                 console.log(`Updating web resource ${resource[0].name}`);
 
-                return api.Update("webresourceset", result.List[0].webresourceid, webResource);
+                return api.update("webresourceset", result.data.value[0].webresourceid, webResource);
             }
         }
     });
@@ -145,12 +142,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
 
         console.log("\r\nUploading web resources...");
 
-        var apiConfig: CRMWebAPI.Config = {
-            APIUrl: config.server + `/api/data/v8.0/`,
-            AccessToken: token
-        };
-
-        const api: CRMWebAPI = new CRMWebAPI(apiConfig);
+        const api = new WebApi("8.0", token, config.server);
 
         // retrieve assets from CRM then create/update
         let upserts: any[] = [];
@@ -207,7 +199,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
 
         for (let i: number = 0; i < tasks.length; i++) {
             try {
-                await api.ExecuteAction(tasks[i].action, tasks[i].data);
+                await api.unboundAction(tasks[i].action, tasks[i].data);
             } catch (ex) {
                 reject(ex);
                 return;
