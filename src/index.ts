@@ -99,31 +99,29 @@ function getUpserts(config: Config, assets: WebResourceAsset[], api: WebApi): Pr
             // check if web resource already exists
             const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`
 
-            let result: any;
-
             try {
-                result = await api.retrieveMultiple("webresourceset", options);
+                const result = await api.retrieveMultiple("webresourceset", options);
+
+                // create or update web resource
+                let webResource: WebResource = {
+                    content: new Buffer(asset.content).toString("base64")
+                };
+
+                if (result.data.value.length === 0) {
+                    console.log(`Creating web resource ${resource[0].name}`);
+
+                    webResource.webresourcetype = getWebResourceType(resource[0].type);
+                    webResource.name = resource[0].name;
+                    webResource.displayname = resource[0].displayname || resource[0].name;
+
+                    return api.create("webresourceset", webResource);
+                } else {
+                    console.log(`Updating web resource ${resource[0].name}`);
+
+                    return api.update("webresourceset", result.data.value[0].webresourceid, webResource);
+                }
             } catch (ex) {
                 return Promise.reject(ex);
-            }
-
-            // create or update web resource
-            let webResource: WebResource = {
-                content: new Buffer(asset.content).toString("base64")
-            };
-
-            if (result.data.value.length === 0) {
-                console.log(`Creating web resource ${resource[0].name}`);
-
-                webResource.webresourcetype = getWebResourceType(resource[0].type);
-                webResource.name = resource[0].name;
-                webResource.displayname = resource[0].displayname || resource[0].name;
-
-                return api.create("webresourceset", webResource);
-            } else {
-                console.log(`Updating web resource ${resource[0].name}`);
-
-                return api.update("webresourceset", result.data.value[0].webresourceid, webResource);
             }
         }
     });
