@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const CRMWebAPI = require("CrmWebAPI");
+const xrm_webapi_1 = require("xrm-webapi");
 const adal = require("adal-node");
 function getWebResourceType(type) {
     switch (type) {
@@ -76,13 +76,10 @@ function getUpserts(config, assets, api) {
         }
         else {
             // check if web resource already exists
-            const options = {
-                Select: ["webresourceid"],
-                Filter: `name eq '${resource[0].name}'`
-            };
+            const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`;
             let result;
             try {
-                result = yield api.GetList("webresourceset", options);
+                result = yield api.retrieveMultiple("webresourceset", options);
             }
             catch (ex) {
                 return Promise.reject(ex);
@@ -91,16 +88,16 @@ function getUpserts(config, assets, api) {
             let webResource = {
                 content: new Buffer(asset.content).toString("base64")
             };
-            if (result.List.length === 0) {
+            if (result.data.value.length === 0) {
                 console.log(`Creating web resource ${resource[0].name}`);
                 webResource.webresourcetype = getWebResourceType(resource[0].type);
                 webResource.name = resource[0].name;
                 webResource.displayname = resource[0].displayname || resource[0].name;
-                return api.Create("webresourceset", webResource);
+                return api.create("webresourceset", webResource);
             }
             else {
                 console.log(`Updating web resource ${resource[0].name}`);
-                return api.Update("webresourceset", result.List[0].webresourceid, webResource);
+                return api.update("webresourceset", result.data.value[0].webresourceid, webResource);
             }
         }
     }));
@@ -116,11 +113,7 @@ function upload(config, assets) {
             return;
         }
         console.log("\r\nUploading web resources...");
-        var apiConfig = {
-            APIUrl: config.server + `/api/data/v8.0/`,
-            AccessToken: token
-        };
-        const api = new CRMWebAPI(apiConfig);
+        const api = new xrm_webapi_1.WebApi("8.0", token, config.server);
         // retrieve assets from CRM then create/update
         let upserts = [];
         try {
@@ -169,7 +162,7 @@ function upload(config, assets) {
         });
         for (let i = 0; i < tasks.length; i++) {
             try {
-                yield api.ExecuteAction(tasks[i].action, tasks[i].data);
+                yield api.unboundAction(tasks[i].action, tasks[i].data);
             }
             catch (ex) {
                 reject(ex);

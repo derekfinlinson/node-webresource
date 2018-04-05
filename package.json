@@ -5,7 +5,6 @@
   "main": "dist/index.js",
   "types": "dist/index.t.ts",
   "scripts": {
-    "prepublishOnly": "yarn run build",
     "semantic-release": "semantic-release",
     "build": "tsc",
     "test": "tsc --noEmit",
