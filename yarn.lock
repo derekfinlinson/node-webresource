@@ -3429,9 +3429,9 @@ xpath.js@~1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/xpath.js/-/xpath.js-1.1.0.tgz#3816a44ed4bb352091083d002a383dd5104a5ff1"
 
-xrm-webapi@^3.1.2:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/xrm-webapi/-/xrm-webapi-3.1.2.tgz#fdf6f09a56adfdd439b9726dd25b055aaf0a7cb3"
+xrm-webapi@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/xrm-webapi/-/xrm-webapi-3.2.0.tgz#1c2dfa30f7a94ebc8403accf7f3e95fb0f225a03"
   dependencies:
     axios "^0.18.0"
 
