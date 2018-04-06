@@ -95,15 +95,15 @@ function getUpsert(config, asset, api) {
                     webResource.displayname = resource[0].displayname || resource[0].name;
                     const result = yield api.createWithReturnData("webresourceset", webResource, "$select=webresourceid");
                     return {
-                        id: result.data.value[0].webresourceid,
+                        id: result.data.webresourceid,
                         type: UpsertType.create
                     };
                 }
                 else {
                     console.log(`Updating web resource ${resource[0].name}`);
-                    const result = yield api.updateWithReturnData("webresourceset", response.data.value[0].webresourceid, webResource, "$select=webresourceid");
+                    const result = yield api.updateWithReturnData("webresourceset", new xrm_webapi_1.Guid(response.data.value[0].webresourceid), webResource, "$select=webresourceid");
                     return {
-                        id: result.data.value[0].webresourceid,
+                        id: result.data.webresourceid,
                         type: UpsertType.update
                     };
                 }

@@ -1,4 +1,4 @@
-import { WebApi } from 'xrm-webapi';
+import { Guid, WebApi } from 'xrm-webapi';
 
 const adal: any = require("adal-node");
 
@@ -126,16 +126,16 @@ async function getUpsert(config: Config, asset: WebResourceAsset, api: WebApi): 
                 const result = await api.createWithReturnData("webresourceset", webResource, "$select=webresourceid");
 
                 return {
-                    id: result.data.value[0].webresourceid,
+                    id: result.data.webresourceid,
                     type: UpsertType.create
                 };
             } else {
                 console.log(`Updating web resource ${resource[0].name}`);
 
-                const result = await api.updateWithReturnData("webresourceset", response.data.value[0].webresourceid, webResource, "$select=webresourceid");
+                const result = await api.updateWithReturnData("webresourceset", new Guid(response.data.value[0].webresourceid), webResource, "$select=webresourceid");
 
                 return {
-                    id: result.data.value[0].webresourceid,
+                    id: result.data.webresourceid,
                     type: UpsertType.update
                 };
             }
