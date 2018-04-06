@@ -34,6 +34,11 @@ function getWebResourceType(type) {
             return 10;
     }
 }
+var UpsertType;
+(function (UpsertType) {
+    UpsertType[UpsertType["create"] = 0] = "create";
+    UpsertType[UpsertType["update"] = 1] = "update";
+})(UpsertType || (UpsertType = {}));
 function authenticate(config) {
     return new Promise((resolve, reject) => {
         // authenticate
@@ -64,42 +69,50 @@ function authenticate(config) {
         }
     });
 }
-function getUpserts(config, assets, api) {
-    return assets.map((asset) => __awaiter(this, void 0, void 0, function* () {
+function getUpsert(config, asset, api) {
+    return __awaiter(this, void 0, void 0, function* () {
         // get web resource from config
         let resource = config.webResources.filter((wr) => {
             return wr.path === asset.path;
         });
         if (resource.length === 0) {
             console.log("Web resource " + asset.path + " is not configured");
-            return Promise.resolve();
+            return Promise.resolve(null);
         }
         else {
             // check if web resource already exists
             const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`;
             try {
-                const result = yield api.retrieveMultiple("webresourceset", options);
+                const response = yield api.retrieveMultiple("webresourceset", options);
                 // create or update web resource
                 let webResource = {
                     content: new Buffer(asset.content).toString("base64")
                 };
-                if (result.data.value.length === 0) {
+                if (response.data.value.length === 0) {
                     console.log(`Creating web resource ${resource[0].name}`);
                     webResource.webresourcetype = getWebResourceType(resource[0].type);
                     webResource.name = resource[0].name;
                     webResource.displayname = resource[0].displayname || resource[0].name;
-                    return api.create("webresourceset", webResource);
+                    const result = yield api.createWithReturnData("webresourceset", webResource, "$select=webresourceid");
+                    return {
+                        id: result.data.value[0].webresourceid,
+                        type: UpsertType.create
+                    };
                 }
                 else {
                     console.log(`Updating web resource ${resource[0].name}`);
-                    return api.update("webresourceset", result.data.value[0].webresourceid, webResource);
+                    const result = yield api.updateWithReturnData("webresourceset", response.data.value[0].webresourceid, webResource, "$select=webresourceid");
+                    return {
+                        id: result.data.value[0].webresourceid,
+                        type: UpsertType.update
+                    };
                 }
             }
             catch (ex) {
                 return Promise.reject(ex);
             }
         }
-    }));
+    });
 }
 function upload(config, assets) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -112,11 +125,14 @@ function upload(config, assets) {
             return;
         }
         console.log("\r\nUploading web resources...");
-        const api = new xrm_webapi_1.WebApi("8.0", token, config.server);
+        const api = new xrm_webapi_1.WebApi("8.2", token, config.server);
         // retrieve assets from CRM then create/update
-        let upserts = [];
+        let upserts;
         try {
-            upserts = yield Promise.all(getUpserts(config, assets, api));
+            const promises = assets.map(asset => {
+                return getUpsert(config, asset, api);
+            });
+            upserts = yield Promise.all(promises);
         }
         catch (ex) {
             reject(ex);
@@ -127,14 +143,16 @@ function upload(config, assets) {
         // get updates and inserts
         const updates = [];
         const inserts = [];
-        upserts.forEach(u => {
-            if (typeof (u) !== "undefined" && u.hasOwnProperty("EntityID")) {
-                updates.push(`<webresource>{${u.EntityID}}</webresource>`);
+        for (let u of upserts) {
+            if (u != null) {
+                if (u.type === UpsertType.update) {
+                    updates.push(`<webresource>{${u.id}}</webresource>`);
+                }
+                else {
+                    inserts.push(u.id);
+                }
             }
-            else if (typeof (u) !== "undefined") {
-                inserts.push(u);
-            }
-        });
+        }
         const tasks = [];
         // publish all updates at once
         if (updates.length > 0) {
@@ -146,7 +164,7 @@ function upload(config, assets) {
             });
         }
         // add solution component individually
-        inserts.forEach(i => {
+        for (let i of inserts) {
             const item = {
                 action: "AddSolutionComponent",
                 data: {
@@ -158,7 +176,7 @@ function upload(config, assets) {
                 }
             };
             tasks.push(item);
-        });
+        }
         for (let i = 0; i < tasks.length; i++) {
             try {
                 yield api.unboundAction(tasks[i].action, tasks[i].data);

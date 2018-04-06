@@ -52,6 +52,16 @@ export interface WebResourceAsset {
     path: string;
 }
 
+enum UpsertType {
+    create,
+    update
+}
+
+interface Upsert {
+    id: string;
+    type: UpsertType
+}
+
 function authenticate (config: Config): Promise<string> {
     return new Promise((resolve, reject) => {
         // authenticate
@@ -85,46 +95,54 @@ function authenticate (config: Config): Promise<string> {
     });
 }
 
-function getUpserts(config: Config, assets: WebResourceAsset[], api: WebApi): Promise<any>[] {
-    return assets.map(async asset => {
-        // get web resource from config
-        let resource: WebResource[] = config.webResources.filter((wr) => {
-            return wr.path === asset.path;
-        });
+async function getUpsert(config: Config, asset: WebResourceAsset, api: WebApi): Promise<Upsert> {
+    // get web resource from config
+    let resource: WebResource[] = config.webResources.filter((wr) => {
+        return wr.path === asset.path;
+    }); 
 
-        if (resource.length === 0) {
-            console.log("Web resource " + asset.path + " is not configured");
-            return Promise.resolve();
-        } else {
-            // check if web resource already exists
-            const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`
+    if (resource.length === 0) {
+        console.log("Web resource " + asset.path + " is not configured");
+        return Promise.resolve(null);
+    } else {
+        // check if web resource already exists
+        const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`
 
-            try {
-                const result = await api.retrieveMultiple("webresourceset", options);
+        try {
+            const response = await api.retrieveMultiple("webresourceset", options);
 
-                // create or update web resource
-                let webResource: WebResource = {
-                    content: new Buffer(asset.content).toString("base64")
+            // create or update web resource
+            let webResource: WebResource = {
+                content: new Buffer(asset.content).toString("base64")
+            };
+
+            if (response.data.value.length === 0) {
+                console.log(`Creating web resource ${resource[0].name}`);
+
+                webResource.webresourcetype = getWebResourceType(resource[0].type);
+                webResource.name = resource[0].name;
+                webResource.displayname = resource[0].displayname || resource[0].name;
+
+                const result = await api.createWithReturnData("webresourceset", webResource, "$select=webresourceid");
+
+                return {
+                    id: result.data.value[0].webresourceid,
+                    type: UpsertType.create
                 };
+            } else {
+                console.log(`Updating web resource ${resource[0].name}`);
 
-                if (result.data.value.length === 0) {
-                    console.log(`Creating web resource ${resource[0].name}`);
+                const result = await api.updateWithReturnData("webresourceset", response.data.value[0].webresourceid, webResource, "$select=webresourceid");
 
-                    webResource.webresourcetype = getWebResourceType(resource[0].type);
-                    webResource.name = resource[0].name;
-                    webResource.displayname = resource[0].displayname || resource[0].name;
-
-                    return api.create("webresourceset", webResource);
-                } else {
-                    console.log(`Updating web resource ${resource[0].name}`);
-
-                    return api.update("webresourceset", result.data.value[0].webresourceid, webResource);
-                }
-            } catch (ex) {
-                return Promise.reject(ex);
+                return {
+                    id: result.data.value[0].webresourceid,
+                    type: UpsertType.update
+                };
             }
+        } catch (ex) {
+            return Promise.reject(ex);
         }
-    });
+    }
 }
 
 export function upload(config: Config, assets: WebResourceAsset[]): Promise<any> {
@@ -140,13 +158,17 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
 
         console.log("\r\nUploading web resources...");
 
-        const api = new WebApi("8.0", token, config.server);
+        const api = new WebApi("8.2", token, config.server);
 
         // retrieve assets from CRM then create/update
-        let upserts: any[] = [];
+        let upserts: Upsert[];
 
         try {
-            upserts = await Promise.all(getUpserts(config, assets, api));
+            const promises = assets.map(asset => {
+                return getUpsert(config, asset, api);
+            });
+
+            upserts = await Promise.all(promises);
         } catch (ex) {
             reject(ex);
             return;
@@ -156,16 +178,18 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
         console.log("Publishing web resources...");
 
         // get updates and inserts
-        const updates: any[] = [];
-        const inserts: any[] = [];
+        const updates: string[] = [];
+        const inserts: string[] = [];
 
-        upserts.forEach(u => {
-            if (typeof(u) !== "undefined" && u.hasOwnProperty("EntityID")) {
-                updates.push(`<webresource>{${u.EntityID}}</webresource>`);
-            } else if (typeof(u) !== "undefined") {
-                inserts.push(u);
+        for (let u of upserts) {
+            if (u != null) {
+                if (u.type === UpsertType.update) {
+                    updates.push(`<webresource>{${u.id}}</webresource>`);
+                } else {
+                    inserts.push(u.id);
+                }
             }
-        });
+        }
 
         const tasks: any[] = [];
 
@@ -180,7 +204,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
         }
 
         // add solution component individually
-        inserts.forEach(i => {
+        for (let i of inserts) {
             const item: object = {
                 action: "AddSolutionComponent",
                 data: {
@@ -193,7 +217,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
             };
 
             tasks.push(item);
-        });
+        }
 
         for (let i: number = 0; i < tasks.length; i++) {
             try {
