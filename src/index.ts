@@ -123,19 +123,19 @@ async function getUpsert(config: Config, asset: WebResourceAsset, api: WebApi): 
                 webResource.name = resource[0].name;
                 webResource.displayname = resource[0].displayname || resource[0].name;
 
-                const result = await api.createWithReturnData("webresourceset", webResource, "$select=webresourceid");
+                const result = await api.create("webresourceset", webResource);
 
                 return {
-                    id: result.data.webresourceid,
+                    id: result.data.id.value,
                     type: UpsertType.create
                 };
             } else {
                 console.log(`Updating web resource ${resource[0].name}`);
 
-                const result = await api.updateWithReturnData("webresourceset", new Guid(response.data.value[0].webresourceid), webResource, "$select=webresourceid");
+                const result = await api.update("webresourceset", new Guid(response.data.value[0].webresourceid), webResource);
 
                 return {
-                    id: result.data.webresourceid,
+                    id: response.data.value[0].webresourceid,
                     type: UpsertType.update
                 };
             }
