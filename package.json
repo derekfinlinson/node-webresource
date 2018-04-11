@@ -7,14 +7,14 @@
   "scripts": {
     "semantic-release": "semantic-release",
     "build": "tsc",
-    "test": "tsc --noEmit",
+    "test": "jest",
     "travis-deploy-once": "travis-deploy-once"
   },
   "author": "Derek Finlinson",
   "license": "MIT",
   "dependencies": {
     "adal-node": "^0.1.28",
-    "xrm-webapi": "^3.2.1"
+    "xrm-webapi": "^3.2.3"
   },
   "repository": {
     "type": "git",
@@ -25,15 +25,32 @@
   },
   "homepage": "https://github.com/derekfinlinson/node-webresource#readme",
   "devDependencies": {
+    "@types/jest": "^22.2.2",
     "@types/npm": "^2.0.29",
     "cz-conventional-changelog": "^2.1.0",
+    "jest": "^22.4.3",
     "semantic-release": "^15.1.5",
-    "typescript": "^2.8.1",
-    "travis-deploy-once": "^4.4.1"
+    "travis-deploy-once": "^4.4.1",
+    "ts-jest": "^22.4.2",
+    "typescript": "^2.8.1"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   }
 }
