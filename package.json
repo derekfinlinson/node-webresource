@@ -7,7 +7,7 @@
   "scripts": {
     "semantic-release": "semantic-release",
     "build": "tsc",
-    "test": "jest",
+    "test": "tsc --noEmit",
     "travis-deploy-once": "travis-deploy-once"
   },
   "author": "Derek Finlinson",
