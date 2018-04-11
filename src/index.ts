@@ -162,11 +162,12 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
         // retrieve assets from CRM then create/update
         let upserts: Upsert[];
 
+        
+        const promises = assets.map(asset => {
+            return getUpsert(config, asset, token);
+        });
+        
         try {
-            const promises = assets.map(asset => {
-                return getUpsert(config, asset, token);
-            });
-
             upserts = await Promise.all(promises);
         } catch (ex) {
             reject(ex);
