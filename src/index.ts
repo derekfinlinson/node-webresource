@@ -1,6 +1,5 @@
 import { Guid, WebApi } from 'xrm-webapi';
-
-const adal: any = require("adal-node");
+import { AuthenticationContext, TokenResponse} from 'adal-node';
 
 function getWebResourceType(type: string): number {
     switch (type) {
@@ -42,7 +41,7 @@ export interface WebResource {
     displayname?: string;
     name?: string;
     type?: string;
-    content: string;
+    content?: string;
     path?: string;
     webresourcetype?: number;
 }
@@ -66,15 +65,15 @@ function authenticate (config: Config): Promise<string> {
     return new Promise((resolve, reject) => {
         // authenticate
         const authorityHostUrl: string = `https://login.windows.net/${config.tenant}`;
-        const context: any = new adal.AuthenticationContext(authorityHostUrl);
+        const context: AuthenticationContext = new AuthenticationContext(authorityHostUrl);
         const clientId: string = config.clientId || "c67c746f-9745-46eb-83bb-5742263736b7";
 
         // use client id/secret auth
         if (config.clientSecret != null && config.clientSecret !== "") {
             context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret,
-                (ex: string, token: any) => {
+                (ex: Error, token: TokenResponse) => {
                     if (ex) {
-                        reject(ex);
+                        reject(ex.message);
                     } else {
                         resolve(token.accessToken);
                     }
@@ -83,9 +82,9 @@ function authenticate (config: Config): Promise<string> {
         // username/password authentication
         } else {
             context.acquireTokenWithUsernamePassword(config.server, config.username, config.password, clientId,
-                (ex: string, token: any) => {
+                (ex: Error, token: TokenResponse) => {
                     if (ex) {
-                        reject(ex);
+                        reject(ex.message);
                     } else {
                         resolve(token.accessToken);
                     }
@@ -95,7 +94,7 @@ function authenticate (config: Config): Promise<string> {
     });
 }
 
-async function getUpsert(config: Config, asset: WebResourceAsset, api: WebApi): Promise<Upsert> {
+async function getUpsert(config: Config, asset: WebResourceAsset, token: string): Promise<Upsert> {
     // get web resource from config
     let resource: WebResource[] = config.webResources.filter((wr) => {
         return wr.path === asset.path;
@@ -103,14 +102,16 @@ async function getUpsert(config: Config, asset: WebResourceAsset, api: WebApi): 
 
     if (resource.length === 0) {
         console.log("Web resource " + asset.path + " is not configured");
-        return Promise.resolve(null);
+        return null;
     } else {
+        const api = new WebApi("8.2", token, config.server);
+
         // check if web resource already exists
         const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`
 
         try {
             const response = await api.retrieveMultiple("webresourceset", options);
-
+            
             // create or update web resource
             let webResource: WebResource = {
                 content: new Buffer(asset.content).toString("base64")
@@ -158,14 +159,12 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
 
         console.log("\r\nUploading web resources...");
 
-        const api = new WebApi("8.2", token, config.server);
-
         // retrieve assets from CRM then create/update
         let upserts: Upsert[];
 
         try {
             const promises = assets.map(asset => {
-                return getUpsert(config, asset, api);
+                return getUpsert(config, asset, token);
             });
 
             upserts = await Promise.all(promises);
@@ -218,6 +217,8 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
 
             tasks.push(item);
         }
+
+        const api = new WebApi("8.2", token, config.server);
 
         for (let i: number = 0; i < tasks.length; i++) {
             try {
