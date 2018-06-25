@@ -1,27 +1,27 @@
-import { Guid, WebApi } from 'xrm-webapi';
-import { AuthenticationContext, TokenResponse} from 'adal-node';
+import { Guid, WebApi, RetrieveMultipleResponse, Entity } from "xrm-webapi";
+import { AuthenticationContext, TokenResponse} from "adal-node";
 
 function getWebResourceType(type: string): number {
     switch (type) {
-        case 'HTML':
-            return 1;            
-        case 'CSS':
+        case "HTML":
+            return 1;
+        case "CSS":
             return 2;
-        case 'JavaScript':
+        case "JavaScript":
             return 3;
-        case 'XML':
+        case "XML":
             return 4;
-        case 'PNG':
+        case "PNG":
             return 5;
-        case 'JPG':
+        case "JPG":
             return 6;
-        case 'GIF':
+        case "GIF":
             return 7;
-        case 'XAP':
+        case "XAP":
             return 8;
-        case 'XSL':
+        case "XSL":
             return 9;
-        case 'ICO':
+        case "ICO":
             return 10;
     }
 }
@@ -58,7 +58,7 @@ enum UpsertType {
 
 interface Upsert {
     id: string;
-    type: UpsertType
+    type: UpsertType;
 }
 
 function authenticate (config: Config): Promise<string> {
@@ -98,33 +98,33 @@ async function getUpsert(config: Config, asset: WebResourceAsset, token: string)
     // get web resource from config
     let resource: WebResource[] = config.webResources.filter((wr) => {
         return wr.path === asset.path;
-    }); 
+    });
 
     if (resource.length === 0) {
         console.log("Web resource " + asset.path + " is not configured");
         return null;
     } else {
-        const api = new WebApi("8.2", token, config.server);
+        const api: WebApi = new WebApi({ version: "8.2", accessToken: token, url: config.server});
 
         // check if web resource already exists
-        const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`
+        const options: string = `$select=webresourceid&$filter=name eq '${resource[0].name}'`;
 
         try {
-            const response = await api.retrieveMultiple("webresourceset", options);
-            
+            const response: RetrieveMultipleResponse = await api.retrieveMultiple("webresourceset", options);
+
             // create or update web resource
             let webResource: WebResource = {
                 content: new Buffer(asset.content).toString("base64")
             };
 
-            if (response.data.value.length === 0) {
+            if (response.value.length === 0) {
                 console.log(`Creating web resource ${resource[0].name}`);
 
                 webResource.webresourcetype = getWebResourceType(resource[0].type);
                 webResource.name = resource[0].name;
                 webResource.displayname = resource[0].displayname || resource[0].name;
 
-                const result = await api.create("webresourceset", webResource);
+                const result: Entity = await api.create("webresourceset", webResource);
 
                 return {
                     id: result.data.id.value,
@@ -133,15 +133,15 @@ async function getUpsert(config: Config, asset: WebResourceAsset, token: string)
             } else {
                 console.log(`Updating web resource ${resource[0].name}`);
 
-                const result = await api.update("webresourceset", new Guid(response.data.value[0].webresourceid), webResource);
+                await api.update("webresourceset", new Guid(response.value[0].webresourceid), webResource);
 
                 return {
-                    id: response.data.value[0].webresourceid,
+                    id: response.value[0].webresourceid,
                     type: UpsertType.update
                 };
             }
         } catch (ex) {
-            return Promise.reject(ex);
+            throw new Error(ex);
         }
     }
 }
@@ -153,8 +153,7 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
         try {
             token = await authenticate(config);
         } catch (ex) {
-            reject(ex);
-            return;
+            throw new Error(ex);
         }
 
         console.log("\r\nUploading web resources...");
@@ -162,16 +161,14 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
         // retrieve assets from CRM then create/update
         let upserts: Upsert[];
 
-        
-        const promises = assets.map(asset => {
+        const promises: Promise<any>[] = assets.map(asset => {
             return getUpsert(config, asset, token);
         });
-        
+
         try {
             upserts = await Promise.all(promises);
         } catch (ex) {
-            reject(ex);
-            return;
+            throw new Error(ex);
         }
 
         // publish resources
@@ -219,14 +216,13 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
             tasks.push(item);
         }
 
-        const api = new WebApi("8.2", token, config.server);
+        const api: WebApi = new WebApi({ version: "8.2", accessToken: token, url: config.server});
 
         for (let i: number = 0; i < tasks.length; i++) {
             try {
                 await api.unboundAction(tasks[i].action, tasks[i].data);
             } catch (ex) {
-                reject(ex);
-                return;
+                throw new Error(ex);
             }
         }
 

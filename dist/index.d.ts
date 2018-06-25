@@ -12,7 +12,7 @@ export interface WebResource {
     displayname?: string;
     name?: string;
     type?: string;
-    content: string;
+    content?: string;
     path?: string;
     webresourcetype?: number;
 }
