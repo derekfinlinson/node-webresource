@@ -1,10 +1,7 @@
-import { WebResourceAsset, Config, upload } from '../src/index';
-import { AuthenticationContext } from 'adal-node';
+import { WebResourceAsset, Config, upload } from "../src/index";
 
-jest.mock('AuthenticationContext');
-
-describe('uploads using username/password', () => {
-    const config = {
+describe("uploads using username/password", () => {
+    const config: any = {
         server: "https://org.crm.dynamics.com",
         username: "user@org.onmicrosoft.com",
         password: "password",
@@ -12,39 +9,35 @@ describe('uploads using username/password', () => {
         tenant: "org.onmicrosoft.com",
         webResources: [
             {
-                path: 'file.js',
-                name: 'File'
+                path: "file.js",
+                name: "File"
             }
         ]
     };
 
-    test('uploads new web resource', async () => {
-        const assets = [
+    test("uploads new web resource", async () => {
+        const assets: any = [
             {
-                path: 'file.js',
-                content: 'function() {}'
+                path: "file.js",
+                content: "function() {}"
             }
         ];
 
-        const context = new AuthenticationContext('');
-
-        context.acquireTokenWithUsernamePassword.mockResolvedValue({})
-
         await upload(config, assets);
     });
-    
-    test('uploads existing web resource', () => {
-    
-    });    
-});
 
-describe('uploads using client id/secret', () => {
-    test('uploads new web resource', () => {
+    test("uploads existing web resource", () => {
 
     });
-    
-    test('uploads existing web resource', () => {
-    
+});
+
+describe("uploads using client id/secret", () => {
+    test("uploads new web resource", () => {
+
+    });
+
+    test("uploads existing web resource", () => {
+
     });
 });
 

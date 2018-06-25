@@ -4,17 +4,19 @@
   "description": "Node module to upload web resources to Dynamics 365",
   "main": "dist/index.js",
   "types": "dist/index.t.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "semantic-release": "semantic-release",
-    "build": "tsc",
-    "test": "tsc --noEmit",
+    "test": "tsc -p .",
     "travis-deploy-once": "travis-deploy-once"
   },
   "author": "Derek Finlinson",
   "license": "MIT",
   "dependencies": {
     "adal-node": ">=0.1.28",
-    "xrm-webapi": ">=3.2.4"
+    "xrm-webapi": "^4.0.1"
   },
   "repository": {
     "type": "git",
@@ -25,14 +27,14 @@
   },
   "homepage": "https://github.com/derekfinlinson/node-webresource#readme",
   "devDependencies": {
-    "@types/jest": "^22.2.2",
+    "@types/jest": "^23.1.1",
     "@types/npm": "^2.0.29",
     "cz-conventional-changelog": "^2.1.0",
-    "jest": "^22.4.3",
-    "semantic-release": "^15.1.5",
-    "travis-deploy-once": "^4.4.1",
-    "ts-jest": "^22.4.2",
-    "typescript": "^2.8.1"
+    "jest": "^23.2.0",
+    "semantic-release": "^15.6.0",
+    "travis-deploy-once": "^5.0.0",
+    "ts-jest": "^22.4.6",
+    "typescript": "^2.9.2"
   },
   "config": {
     "commitizen": {
