@@ -128,7 +128,7 @@ async function getUpsert(config: Config, asset: WebResourceAsset, token: string)
 
                 return {
                     id: result.webresourceid,
-                    type: UpsertType.create
+                    type: UpsertType.create,
                 };
             } else {
                 console.log(`Updating web resource ${resource[0].name}`);
@@ -137,7 +137,7 @@ async function getUpsert(config: Config, asset: WebResourceAsset, token: string)
 
                 return {
                     id: response.value[0].webresourceid,
-                    type: UpsertType.update
+                    type: UpsertType.update,
                 };
             }
         } catch (ex) {
