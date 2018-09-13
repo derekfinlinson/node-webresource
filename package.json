@@ -10,7 +10,7 @@
   "scripts": {
     "semantic-release": "semantic-release",
     "build": "tsc -p .",
-    "test": "jest",
+    "test": "jest"
   },
   "author": "Derek Finlinson",
   "license": "MIT",
