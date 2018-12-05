@@ -10,7 +10,8 @@
   "scripts": {
     "semantic-release": "semantic-release",
     "build": "tsc -p .",
-    "test": "jest"
+    "test": "jest",
+    "commit": "git-cz"
   },
   "author": "Derek Finlinson",
   "license": "MIT",
@@ -27,13 +28,14 @@
   },
   "homepage": "https://github.com/derekfinlinson/node-webresource#readme",
   "devDependencies": {
-    "@types/jest": "^23.3.9",
+    "@types/jest": "^23.3.10",
     "@types/npm": "^2.0.29",
+    "commitizen": "^3.0.5",
     "cz-conventional-changelog": "^2.1.0",
     "jest": "^23.6.0",
-    "semantic-release": "^15.12.2",
+    "semantic-release": "^15.12.4",
     "ts-jest": "^23.10.5",
-    "typescript": "^3.1.6"
+    "typescript": "^3.2.1"
   },
   "config": {
     "commitizen": {
