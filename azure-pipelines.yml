@@ -12,10 +12,11 @@ steps:
     versionSpec: '8.x'
   displayName: 'Install Node.js'
 
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+- script: npm install
+  displayName: 'install dependencies'
+
+- script: npm run build
+  displayName: 'build'
 
 - script: npm run semantic-release
   displayName: 'deploy to npm'
