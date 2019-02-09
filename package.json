@@ -16,7 +16,7 @@
   "author": "Derek Finlinson",
   "license": "MIT",
   "dependencies": {
-    "adal-node": ">0.1.28",
+    "adal-node": ">=0.1.28",
     "xrm-webapi": "^4.0.1"
   },
   "repository": {
