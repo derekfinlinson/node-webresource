@@ -17,7 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "adal-node": ">=0.1.28",
-    "xrm-webapi": "^4.0.1"
+    "xrm-webapi": "^6.0.0"
   },
   "repository": {
     "type": "git",
@@ -28,13 +28,13 @@
   },
   "homepage": "https://github.com/derekfinlinson/node-webresource#readme",
   "devDependencies": {
-    "@types/jest": "^23.3.14",
-    "@types/npm": "^2.0.29",
-    "commitizen": "^3.0.5",
+    "@types/jest": "^24.0.11",
+    "@types/npm": "^2.0.30",
+    "commitizen": "^3.0.7",
     "cz-conventional-changelog": "^2.1.0",
-    "jest": "^23.6.0",
-    "semantic-release": "^15.13.3",
-    "ts-jest": "^23.10.5",
+    "jest": "^24.5.0",
+    "semantic-release": "^15.13.4",
+    "ts-jest": "^24.0.0",
     "typescript": "^3.3.3"
   },
   "config": {

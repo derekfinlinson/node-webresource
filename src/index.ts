@@ -1,4 +1,4 @@
-import { Guid, WebApi, RetrieveMultipleResponse, Entity } from 'xrm-webapi';
+import { Guid, WebApiConfig, retrieveMultiple, createWithReturnData, update, unboundAction } from 'xrm-webapi';
 import { AuthenticationContext, TokenResponse} from 'adal-node';
 
 function getWebResourceType(type: string): number {
@@ -104,13 +104,13 @@ async function getUpsert(config: Config, asset: WebResourceAsset, token: string)
         console.log('Web resource ' + asset.path + ' is not configured');
         return null;
     } else {
-        const api: WebApi = new WebApi({ version: '8.2', accessToken: token, url: config.server});
+        const apiConfig = new WebApiConfig('8.2', token, config.server);
 
         // check if web resource already exists
         const options: string = `$select=webresourceid&$filter=name eq '${resource[0].name}'`;
 
         try {
-            const response: RetrieveMultipleResponse = await api.retrieveMultiple('webresourceset', options);
+            const response = await retrieveMultiple(apiConfig, 'webresourceset', options);
 
             // create or update web resource
             let webResource: WebResource = {
@@ -124,7 +124,7 @@ async function getUpsert(config: Config, asset: WebResourceAsset, token: string)
                 webResource.name = resource[0].name;
                 webResource.displayname = resource[0].displayname || resource[0].name;
 
-                const result: Entity = await api.createWithReturnData('webresourceset', webResource, '$select=webresourceid');
+                const result = await createWithReturnData(apiConfig, 'webresourceset', webResource, '$select=webresourceid');
 
                 return {
                     id: result.webresourceid,
@@ -133,7 +133,7 @@ async function getUpsert(config: Config, asset: WebResourceAsset, token: string)
             } else {
                 console.log(`Updating web resource ${resource[0].name}`);
 
-                await api.update('webresourceset', new Guid(response.value[0].webresourceid), webResource);
+                await update(apiConfig, 'webresourceset', new Guid(response.value[0].webresourceid), webResource);
 
                 return {
                     id: response.value[0].webresourceid,
@@ -216,11 +216,11 @@ export function upload(config: Config, assets: WebResourceAsset[]): Promise<any>
             tasks.push(item);
         }
 
-        const api: WebApi = new WebApi({ version: '8.2', accessToken: token, url: config.server});
+        const apiConfig = new WebApiConfig('8.2', token, config.server);
 
         for (let i: number = 0; i < tasks.length; i++) {
             try {
-                await api.unboundAction(tasks[i].action, tasks[i].data);
+                await unboundAction(apiConfig, tasks[i].action, tasks[i].data);
             } catch (ex) {
                 throw new Error(ex);
             }
