@@ -1,4 +1,4 @@
-import { Guid, WebApiConfig, retrieveMultiple, createWithReturnData, update, unboundAction } from 'xrm-webapi';
+import { Guid, WebApiConfig, retrieveMultiple, createWithReturnData, update, unboundAction } from 'xrm-webapi/dist/xrm-webapi-node';
 import { AuthenticationContext, TokenResponse} from 'adal-node';
 
 function getWebResourceType(type: string): number {

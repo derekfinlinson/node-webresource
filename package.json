@@ -33,9 +33,9 @@
     "commitizen": "^3.0.7",
     "cz-conventional-changelog": "^2.1.0",
     "jest": "^24.5.0",
-    "semantic-release": "^15.13.4",
+    "semantic-release": "^15.13.8",
     "ts-jest": "^24.0.0",
-    "typescript": "^3.3.3"
+    "typescript": "^3.3.4000"
   },
   "config": {
     "commitizen": {
