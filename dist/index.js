@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const xrm_webapi_1 = require("xrm-webapi");
+const xrm_webapi_node_1 = require("xrm-webapi/dist/xrm-webapi-node");
 const adal_node_1 = require("adal-node");
 function getWebResourceType(type) {
     switch (type) {
@@ -80,11 +80,11 @@ function getUpsert(config, asset, token) {
             return null;
         }
         else {
-            const api = new xrm_webapi_1.WebApi({ version: "8.2", accessToken: token, url: config.server });
+            const apiConfig = new xrm_webapi_node_1.WebApiConfig("8.2", token, config.server);
             // check if web resource already exists
-            const options = `$select=webresourceid&$filter=name eq '${resource[0].name}'`;
+            const options = `$select=webresourceid&$filter=name eq "${resource[0].name}"`;
             try {
-                const response = yield api.retrieveMultiple("webresourceset", options);
+                const response = yield xrm_webapi_node_1.retrieveMultiple(apiConfig, "webresourceset", options);
                 // create or update web resource
                 let webResource = {
                     content: new Buffer(asset.content).toString("base64")
@@ -94,18 +94,18 @@ function getUpsert(config, asset, token) {
                     webResource.webresourcetype = getWebResourceType(resource[0].type);
                     webResource.name = resource[0].name;
                     webResource.displayname = resource[0].displayname || resource[0].name;
-                    const result = yield api.create("webresourceset", webResource);
+                    const result = yield xrm_webapi_node_1.createWithReturnData(apiConfig, "webresourceset", webResource, "$select=webresourceid");
                     return {
-                        id: result.data.id.value,
-                        type: UpsertType.create
+                        id: result.webresourceid,
+                        type: UpsertType.create,
                     };
                 }
                 else {
                     console.log(`Updating web resource ${resource[0].name}`);
-                    yield api.update("webresourceset", new xrm_webapi_1.Guid(response.value[0].webresourceid), webResource);
+                    yield xrm_webapi_node_1.update(apiConfig, "webresourceset", new xrm_webapi_node_1.Guid(response.value[0].webresourceid), webResource);
                     return {
                         id: response.value[0].webresourceid,
-                        type: UpsertType.update
+                        type: UpsertType.update,
                     };
                 }
             }
@@ -175,10 +175,10 @@ function upload(config, assets) {
             };
             tasks.push(item);
         }
-        const api = new xrm_webapi_1.WebApi({ version: "8.2", accessToken: token, url: config.server });
+        const apiConfig = new xrm_webapi_node_1.WebApiConfig("8.2", token, config.server);
         for (let i = 0; i < tasks.length; i++) {
             try {
-                yield api.unboundAction(tasks[i].action, tasks[i].data);
+                yield xrm_webapi_node_1.unboundAction(apiConfig, tasks[i].action, tasks[i].data);
             }
             catch (ex) {
                 throw new Error(ex);
