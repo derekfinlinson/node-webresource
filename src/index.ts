@@ -116,7 +116,8 @@ function authenticate(config: Config): Promise<string> {
 async function getUpsert(
   config: Config,
   asset: WebResourceAsset,
-  token: string
+  token: string,
+  enableLogs: boolean = true
 ): Promise<Upsert> {
   // get web resource from config
   let resource: WebResource[] = config.webResources.filter(wr => {
@@ -124,7 +125,7 @@ async function getUpsert(
   });
 
   if (resource.length === 0) {
-    console.log("Web resource " + asset.path + " is not configured");
+    enableLogs && console.log("Web resource " + asset.path + " is not configured");
     return null;
   } else {
     const apiConfig = new WebApiConfig("8.2", token, config.server);
@@ -147,7 +148,7 @@ async function getUpsert(
       };
 
       if (response.value.length === 0) {
-        console.log(`Creating web resource ${resource[0].name}`);
+        enableLogs && console.log(`Creating web resource ${resource[0].name}`);
 
         webResource.webresourcetype = getWebResourceType(resource[0].type);
         webResource.name = resource[0].name;
@@ -165,7 +166,7 @@ async function getUpsert(
           type: UpsertType.create
         };
       } else {
-        console.log(`Updating web resource ${resource[0].name}`);
+        enableLogs && console.log(`Updating web resource ${resource[0].name}`);
 
         await update(
           apiConfig,
@@ -187,7 +188,8 @@ async function getUpsert(
 
 export async function upload(
   config: Config,
-  assets: WebResourceAsset[]
+  assets: WebResourceAsset[],
+  enableLogs: boolean = true
 ): Promise<any> {
   let token: string;
 
@@ -197,13 +199,13 @@ export async function upload(
     throw new Error(error.message);
   }
 
-  console.log("\r\nUploading web resources...");
+  enableLogs && console.log("\r\nUploading web resources...");
 
   // retrieve assets from CRM then create/update
   let upserts: Upsert[];
 
   const promises: Promise<any>[] = assets.map(asset => {
-    return getUpsert(config, asset, token);
+    return getUpsert(config, asset, token, enableLogs);
   });
 
   try {
@@ -213,7 +215,7 @@ export async function upload(
   }
 
   // publish resources
-  console.log("Publishing web resources...");
+  enableLogs && console.log("Publishing web resources...");
 
   // get updates and inserts
   const updates: string[] = [];
@@ -269,5 +271,5 @@ export async function upload(
     }
   }
 
-  console.log("Uploaded and published web resources\r\n");
+  enableLogs && console.log("Uploaded and published web resources\r\n");
 }
