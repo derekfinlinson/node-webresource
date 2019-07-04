@@ -1,11 +1,12 @@
 import {
-  Guid,
+  parseGuid,
   WebApiConfig,
   retrieveMultiple,
   createWithReturnData,
   update,
   unboundAction
 } from "xrm-webapi/dist/xrm-webapi-node";
+
 import { AuthenticationContext, TokenResponse } from "adal-node";
 
 function getWebResourceType(type: string): number {
@@ -71,21 +72,13 @@ interface Upsert {
 function authenticate(config: Config): Promise<string> {
   return new Promise((resolve, reject) => {
     // authenticate
-    const authorityHostUrl: string = `https://login.windows.net/${
-      config.tenant
-    }`;
-    const context: AuthenticationContext = new AuthenticationContext(
-      authorityHostUrl
-    );
-    const clientId: string =
-      config.clientId || "c67c746f-9745-46eb-83bb-5742263736b7";
+    const authorityHostUrl: string = `https://login.windows.net/${config.tenant}`;
+    const context = new AuthenticationContext(authorityHostUrl);
+    const clientId: string = config.clientId || "c67c746f-9745-46eb-83bb-5742263736b7";
 
     // use client id/secret auth
     if (config.clientSecret != null && config.clientSecret !== "") {
-      context.acquireTokenWithClientCredentials(
-        config.server,
-        clientId,
-        config.clientSecret,
+      context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret,
         (ex: Error, token: TokenResponse) => {
           if (ex) {
             reject(ex.message);
@@ -94,13 +87,9 @@ function authenticate(config: Config): Promise<string> {
           }
         }
       );
-      // username/password authentication
+    // username/password authentication
     } else {
-      context.acquireTokenWithUsernamePassword(
-        config.server,
-        config.username,
-        config.password,
-        clientId,
+      context.acquireTokenWithUsernamePassword(config.server, config.username, config.password, clientId,
         (ex: Error, token: TokenResponse) => {
           if (ex) {
             reject(ex.message);
@@ -113,15 +102,9 @@ function authenticate(config: Config): Promise<string> {
   });
 }
 
-async function getUpsert(
-  config: Config,
-  asset: WebResourceAsset,
-  token: string
-): Promise<Upsert> {
+async function getUpsert(config: Config, asset: WebResourceAsset, token: string): Promise<Upsert> {
   // get web resource from config
-  let resource: WebResource[] = config.webResources.filter(wr => {
-    return wr.path === asset.path;
-  });
+  let resource: WebResource[] = config.webResources.filter(wr => wr.path === asset.path);
 
   if (resource.length === 0) {
     console.log("Web resource " + asset.path + " is not configured");
@@ -130,16 +113,10 @@ async function getUpsert(
     const apiConfig = new WebApiConfig("8.2", token, config.server);
 
     // check if web resource already exists
-    const options: string = `$select=webresourceid&$filter=name eq '${
-      resource[0].name
-    }'`;
+    const options: string = `$select=webresourceid&$filter=name eq '${resource[0].name}'`;
 
     try {
-      const response = await retrieveMultiple(
-        apiConfig,
-        "webresourceset",
-        options
-      );
+      const response = await retrieveMultiple(apiConfig, "webresourceset", options);
 
       // create or update web resource
       let webResource: WebResource = {
@@ -153,12 +130,7 @@ async function getUpsert(
         webResource.name = resource[0].name;
         webResource.displayname = resource[0].displayname || resource[0].name;
 
-        const result = await createWithReturnData(
-          apiConfig,
-          "webresourceset",
-          webResource,
-          "$select=webresourceid"
-        );
+        const result = await createWithReturnData(apiConfig, "webresourceset", webResource, "$select=webresourceid");
 
         return {
           id: result.webresourceid,
@@ -167,12 +139,7 @@ async function getUpsert(
       } else {
         console.log(`Updating web resource ${resource[0].name}`);
 
-        await update(
-          apiConfig,
-          "webresourceset",
-          new Guid(response.value[0].webresourceid),
-          webResource
-        );
+        await update(apiConfig, "webresourceset", parseGuid(response.value[0].webresourceid), webResource);
 
         return {
           id: response.value[0].webresourceid,
@@ -185,10 +152,7 @@ async function getUpsert(
   }
 }
 
-export async function upload(
-  config: Config,
-  assets: WebResourceAsset[]
-): Promise<any> {
+export async function upload(config: Config, assets: WebResourceAsset[]): Promise<any> {
   let token: string;
 
   try {
@@ -202,9 +166,7 @@ export async function upload(
   // retrieve assets from CRM then create/update
   let upserts: Upsert[];
 
-  const promises: Promise<any>[] = assets.map(asset => {
-    return getUpsert(config, asset, token);
-  });
+  const promises: Promise<any>[] = assets.map(asset => getUpsert(config, asset, token));
 
   try {
     upserts = await Promise.all(promises);
