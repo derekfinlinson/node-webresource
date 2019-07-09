@@ -81,7 +81,7 @@ function authenticate(config: Config): Promise<string> {
       context.acquireTokenWithClientCredentials(config.server, clientId, config.clientSecret,
         (ex: Error, token: TokenResponse) => {
           if (ex) {
-            reject(ex.message);
+            reject(ex);
           } else {
             resolve(token.accessToken);
           }
@@ -92,7 +92,7 @@ function authenticate(config: Config): Promise<string> {
       context.acquireTokenWithUsernamePassword(config.server, config.username, config.password, clientId,
         (ex: Error, token: TokenResponse) => {
           if (ex) {
-            reject(ex.message);
+            reject(ex);
           } else {
             resolve(token.accessToken);
           }
@@ -158,7 +158,7 @@ export async function upload(config: Config, assets: WebResourceAsset[]): Promis
   try {
     token = await authenticate(config);
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(error);
   }
 
   console.log("\r\nUploading web resources...");
