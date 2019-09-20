@@ -15,7 +15,7 @@ Sign in [here](https://login.microsoftonline.com/common/oauth2/authorize?%20resp
 
 ## Sample config file and usage
 
-For a more complete sample using webpack, see [generator-xrm-webresource](https://github.com/derekfinlinson/generator-xrm-webresource/blob/master/generators/app/templates/webpack.config.js)
+For a more complete sample using webpack, see [d365-cli](https://github.com/derekfinlinson/d365-cli/blob/master/src/commands/create/templates/webresource/webpack.config.js)
 
 ```javascript
 var uploadConfig = {
@@ -24,7 +24,9 @@ var uploadConfig = {
     webResources: [
         {
             "path": "path\\to\\file\\formscript.js",
-            "name": "new_formscript.js"
+            "name": "new_formscript.js",
+            "displayname": "Form Script",
+            "type": "JavaScript"
         }
     ],
     solution: "MySolution"
@@ -46,7 +48,7 @@ var assets = [
 webResource.upload(uploadConfig, assets).then(() => {
     callback();
 }, (error) => {
-    console.log(error);
+    console.log(error.message);
     callback();
 });
 ```
