@@ -11,13 +11,16 @@
     "semantic-release": "semantic-release",
     "build": "tsc -p .",
     "test": "jest",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "author": "Derek Finlinson",
   "license": "MIT",
   "dependencies": {
     "adal-node": "^0.2.1",
-    "xrm-webapi": "^7.0.0"
+    "xrm-webapi": "^7.0.0",
+    "snyk": "^1.316.1"
   },
   "repository": {
     "type": "git",
@@ -55,5 +58,6 @@
       "json",
       "node"
     ]
-  }
+  },
+  "snyk": true
 }
