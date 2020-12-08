@@ -1,4 +1,4 @@
-# DEPRECATED Use [d365-cli](https://github.com/derekfinlinson/d365-cli) instead #
+# DEPRECATED Use [powerapps-deploy](https://github.com/derekfinlinson/powerapps-tools) instead #
 
 # node-webresource
 Node module for publishing Dynamics 365 web resources, inspired by [gulp-webresource](https://github.com/davidyack/gulp-webresource)
