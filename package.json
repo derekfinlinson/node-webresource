@@ -30,10 +30,10 @@
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "@types/npm": "^2.0.31",
-    "commitizen": "^4.0.3",
+    "commitizen": "^4.2.4",
     "cz-conventional-changelog": "^3.1.0",
     "jest": "^25.2.7",
-    "semantic-release": "^17.0.4",
+    "semantic-release": "^17.4.2",
     "ts-jest": "^25.3.1",
     "typescript": "^3.8.3"
   },
